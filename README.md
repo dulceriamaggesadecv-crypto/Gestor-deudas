@@ -1,65 +1,31 @@
 # Control de Deudas (PWA)
 
-App para organizar quién te debe, a quién le debés y tus compras en cuotas.
-Pensada para instalarse en el celular como una app, usando GitHub Pages
-como hosting gratuito.
+Esta carpeta contiene la aplicación y los archivos necesarios para publicarla como una aplicación web instalable (PWA) en GitHub Pages.
 
-> **Importante sobre los datos:** esta versión guarda todo en el almacenamiento
-> local del navegador/dispositivo (no se sincroniza entre celular y
-> computadora). Si borrás los datos del navegador o desinstalás la app,
-> perdés la información. No requiere servidor ni base de datos.
+## Publicar la versión actualizada
 
-## 1. Subir a GitHub
-
-1. Entrá a [github.com](https://github.com) y creá un repositorio nuevo
-   (por ejemplo `control-deudas`), público.
-2. Subí estos archivos **tal cual están, en la raíz del repositorio**
-   (no dentro de una subcarpeta):
+1. Abre el repositorio `https://github.com/dulceriamaggesadecv-crypto/Gestor-deudas`.
+2. Entra a la pestaña **Code**.
+3. Usa **Add file → Upload files**.
+4. Descomprime este ZIP en tu computadora/celular y sube los archivos y la carpeta `icons` a la **raíz** del repositorio. Deben quedar así:
    - `index.html`
    - `manifest.json`
    - `service-worker.js`
-   - la carpeta `icons/` completa (con sus 3 imágenes adentro)
-   - este `README.md` (opcional)
+   - `icons/icon-192.png`
+   - `icons/icon-512.png`
+   - `icons/apple-touch-icon.png`
+5. Si GitHub pregunta si deseas reemplazar archivos existentes, confirma para estos archivos. No borres otros archivos del repositorio.
+6. Pulsa **Commit changes** y espera uno o dos minutos a que GitHub Pages publique los cambios.
 
-   Podés hacerlo arrastrando los archivos en la web de GitHub
-   ("Add file" → "Upload files") o con git:
-   ```bash
-   git init
-   git add .
-   git commit -m "Primera versión de la app"
-   git branch -M main
-   git remote add origin https://github.com/TU-USUARIO/control-deudas.git
-   git push -u origin main
-   ```
+## Instalar en Android
 
-## 2. Activar GitHub Pages
+1. Abre la página en Google Chrome: `https://dulceriamaggesadecv-crypto.github.io/Gestor-deudas/`.
+2. Recarga la página. Si no cambia, cierra la pestaña y vuelve a abrir el enlace.
+3. Pulsa el menú ⋮ de Chrome y busca **Instalar aplicación**. Si aparece, selecciónalo y confirma.
+4. Si Chrome aún dice que no se puede instalar, abre el enlace en una pestaña normal de Chrome (no en un navegador integrado) y revisa que el sitio haya terminado de cargar con conexión a internet.
 
-1. En el repositorio, andá a **Settings → Pages**.
-2. En "Source" elegí **Deploy from a branch**.
-3. Elegí la rama **main** y la carpeta **/ (root)**.
-4. Guardá. En un minuto o dos, GitHub te va a dar una URL parecida a:
-   `https://TU-USUARIO.github.io/control-deudas/`
+## Importante sobre tus datos
 
-## 3. Instalar en el celular
+La aplicación guarda los registros en el almacenamiento local del navegador/dispositivo. No se sincronizan con otros dispositivos. Antes de borrar datos de Chrome o desinstalar, conserva cualquier registro importante por separado.
 
-**Android (Chrome):**
-1. Abrí esa URL en Chrome.
-2. Tocá el menú (⋮) → **"Instalar app"** o **"Agregar a pantalla de inicio"**.
-3. Confirmá. Va a quedar como un ícono más, se abre en su propia ventana
-   sin la barra del navegador.
-
-**iPhone (Safari):**
-1. Abrí la URL en Safari (tiene que ser Safari, no Chrome).
-2. Tocá el ícono de compartir (el cuadrado con la flecha hacia arriba).
-3. Elegí **"Agregar a pantalla de inicio"**.
-4. Confirmá. Queda instalada como una app normal.
-
-Una vez instalada, funciona también sin conexión (el service worker
-guarda en caché los archivos de la app).
-
-## Actualizar la app más adelante
-
-Si en algún momento querés pedirme cambios o nuevas funciones, hacelo en
-el chat como siempre: te vuelvo a generar los archivos actualizados y
-solo tenés que volver a subirlos (reemplazar los mismos archivos) al
-repositorio de GitHub. GitHub Pages se actualiza solo con cada push.
+Esta actualización cambia solo la configuración PWA y la caché, no la lógica de registro de deudas.
