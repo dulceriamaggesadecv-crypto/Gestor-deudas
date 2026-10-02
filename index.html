@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+    <title>Control de Deudas</title>
+
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1976d2">
+    <meta name="mobile-web-app-capable" content="yes">
+
+    <!-- iOS -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Deudas">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+
+    <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png">
+    <style>
+        :root {
+            --bg: #f4f6f8;
+            --card: #ffffff;
+            --text: #333333;
+            --me-deben: #2e7d32;
+            --yo-debo: #c62828;
+            --border: #e0e0e0;
+            --completed: #757575;
+            --row-bg: #fafafa;
+            --row-paid-bg: #f0f0f0;
+            --btn-action-bg: #eee;
+            --btn-action-bg-hover: #ddd;
+            --accent: #1976d2;
+            --accent-bg: rgba(25, 118, 210, 0.12);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) {
+                --bg: #14171a;
+                --card: #1f2327;
+                --text: #e7e7e7;
+                --me-deben: #66bb6a;
+                --yo-debo: #ef5350;
+                --border: #33383d;
+                --completed: #9a9a9a;
+                --row-bg: #24282c;
+                --row-paid-bg: #1a1d20;
+                --btn-action-bg: #2c3135;
+                --btn-action-bg-hover: #383e43;
+                --accent: #64b5f6;
+                --accent-bg: rgba(100, 181, 246, 0.15);
+            }
+        }
+        :root[data-theme="dark"] {
+            --bg: #14171a;
+            --card: #1f2327;
+            --text: #e7e7e7;
+            --me-deben: #66bb6a;
+            --yo-debo: #ef5350;
+            --border: #33383d;
+            --completed: #9a9a9a;
+            --row-bg: #24282c;
+            --row-paid-bg: #1a1d20;
+            --btn-action-bg: #2c3135;
+            --btn-action-bg-hover: #383e43;
+            --accent: #64b5f6;
+            --accent-bg: rgba(100, 181, 246, 0.15);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: calc(20px + env(safe-area-inset-top, 0px)) 20px calc(20px + env(safe-area-inset-bottom, 0px));
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h2.section-title {
+            font-size: 15px;
+            margin: 0 0 12px;
+            color: var(--text);
+        }
+
+        .form-card {
+            background: var(--card);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .credito-group {
+            align-items: center;
+        }
+
+        .credito-check {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .credito-check input[type="checkbox"] {
+            width: 17px;
+            height: 17px;
+            padding: 0;
+            cursor: pointer;
+        }
+
+        #meses:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .cuota-preview {
+            grid-column: 1 / -1;
+            font-size: 12.5px;
+            color: var(--accent);
+            font-weight: 600;
+            min-height: 16px;
+        }
+
+        .credito-tag {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--accent);
+            background: var(--accent-bg);
+            padding: 2px 7px;
+            border-radius: 5px;
+            margin-top: 2px;
+            width: fit-content;
+        }
+
+        input, select, button {
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            background: var(--card);
+            color: var(--text);
+            font-family: inherit;
+        }
+
+        button {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            filter: brightness(0.92);
+        }
+
+        /* Personas */
+        .people-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+        .people-row input {
+            flex: 1;
+        }
+        .people-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .person-chip {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--row-bg);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 6px 6px 6px 12px;
+            font-size: 13px;
+        }
+        .person-chip button {
+            background: none;
+            color: var(--completed);
+            border: none;
+            padding: 2px 6px;
+            font-size: 13px;
+            border-radius: 50%;
+        }
+        .person-chip button:hover {
+            background: var(--btn-action-bg-hover);
+            color: var(--yo-debo);
+        }
+        .no-people {
+            font-size: 13px;
+            color: var(--completed);
+        }
+
+        .lists-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+        }
+
+        .column {
+            background: var(--card);
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.08);
+            min-width: 0;
+        }
+
+        .column-header {
+            font-size: 18px;
+            font-weight: bold;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .me-deben-header { color: var(--me-deben); border-color: var(--me-deben); }
+        .yo-debo-header { color: var(--yo-debo); border-color: var(--yo-debo); }
+
+        .person-group {
+            margin-bottom: 18px;
+        }
+        .person-group:last-child {
+            margin-bottom: 0;
+        }
+        .person-group-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--completed);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            padding: 0 2px 6px;
+        }
+        .person-group-header .sub {
+            font-weight: 700;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        li {
+            background: var(--row-bg);
+            border: 1px solid var(--border);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .row-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+
+        li.paid {
+            background: var(--row-paid-bg);
+            opacity: 0.65;
+        }
+
+        li.paid .item-desc,
+        li.paid .item-amount {
+            text-decoration: line-through;
+            color: var(--completed) !important;
+        }
+
+        .item-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            max-width: 60%;
+            min-width: 0;
+        }
+
+        .item-desc {
+            font-weight: 600;
+            word-break: break-word;
+        }
+
+        .item-amount {
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .me-deben-amount { color: var(--me-deben); }
+        .yo-debo-amount { color: var(--yo-debo); }
+
+        .item-date {
+            font-size: 11px;
+            color: var(--completed);
+        }
+
+        .actions {
+            display: flex;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        .btn-action {
+            background: var(--btn-action-bg);
+            color: var(--text);
+            border: none;
+            padding: 6px 10px;
+            font-size: 14px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .btn-action:hover {
+            background: var(--btn-action-bg-hover);
+        }
+
+        .btn-paid.active {
+            background: #2e7d32;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background: var(--yo-debo);
+            color: white;
+        }
+
+        /* Cuotas */
+        .cuotas-box {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed var(--border);
+        }
+        .cuotas-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+        .cuota-chip {
+            font-size: 11.5px;
+            padding: 5px 9px;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            background: var(--card);
+            color: var(--text);
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .cuota-chip.paid {
+            background: #2e7d32;
+            border-color: #2e7d32;
+            color: white;
+            text-decoration: line-through;
+        }
+        .cuota-progress {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12.5px;
+        }
+        .cuota-progress .restante {
+            font-weight: 700;
+        }
+        .cuota-progress .completo {
+            color: var(--me-deben);
+            font-weight: 700;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            z-index: 100;
+        }
+        .modal-overlay.hidden {
+            display: none;
+        }
+        .modal-box {
+            background: var(--card);
+            color: var(--text);
+            border-radius: 12px;
+            padding: 20px;
+            width: 100%;
+            max-width: 380px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+        }
+        .modal-box h3 {
+            margin: 0 0 14px;
+            font-size: 16px;
+        }
+        .modal-box p {
+            margin: 0 0 18px;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        .modal-field {
+            margin-bottom: 12px;
+        }
+        .modal-field label {
+            display: block;
+            font-size: 12px;
+            color: var(--completed);
+            margin-bottom: 4px;
+        }
+        .modal-field input {
+            width: 100%;
+        }
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+        }
+        .modal-actions button {
+            flex: 1;
+        }
+        .modal-cancel {
+            background: var(--btn-action-bg);
+            color: var(--text);
+        }
+        .modal-danger {
+            background: var(--yo-debo);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Control de Deudas</h1>
+
+    <!-- Personas -->
+    <div class="form-card">
+        <h2 class="section-title">Personas</h2>
+        <form id="personForm" class="people-row">
+            <input type="text" id="personName" placeholder="Nombre de la persona" required>
+            <button type="submit">Agregar</button>
+        </form>
+        <div class="people-chips" id="peopleChips">
+            <span class="no-people">Sincronizando…</span>
+        </div>
+    </div>
+
+    <!-- Formulario de deuda -->
+    <div class="form-card">
+        <h2 class="section-title">Nuevo registro</h2>
+        <form id="debtForm">
+            <div class="form-group">
+                <select id="personSelect" required>
+                    <option value="">Elegí una persona…</option>
+                </select>
+                <select id="type" required>
+                    <option value="meDeben">Me deben</option>
+                    <option value="yoDebo">Yo debo</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <input type="text" id="description" placeholder="Descripción (ej. Almuerzo, Préstamo)" required>
+                <input type="number" id="amount" step="0.01" placeholder="Monto total ($)" required>
+            </div>
+            <div class="form-group credito-group">
+                <label class="credito-check">
+                    <input type="checkbox" id="isCredito">
+                    <span>Es a crédito (en cuotas)</span>
+                </label>
+                <input type="number" id="meses" min="1" step="1" placeholder="Cantidad de meses" disabled>
+                <span class="cuota-preview" id="cuotaPreview"></span>
+            </div>
+            <button type="submit" style="width: 100%;">Agregar Registro</button>
+        </form>
+    </div>
+
+    <!-- Listas -->
+    <div class="lists-container">
+        <!-- Lista Me Deben -->
+        <div class="column">
+            <div class="column-header me-deben-header">
+                <span>Me Deben</span>
+                <span id="totalMeDeben">$0.00</span>
+            </div>
+            <div id="listMeDeben"></div>
+        </div>
+
+        <!-- Lista Yo Debo -->
+        <div class="column">
+            <div class="column-header yo-debo-header">
+                <span>Yo Debo</span>
+                <span id="totalYoDebo">$0.00</span>
+            </div>
+            <div id="listYoDebo"></div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay hidden" id="modalOverlay">
+    <div class="modal-box" id="modalBox"></div>
+</div>
+
+<script>
+    const STORAGE_DEBTS = 'controlDeudas:records';
+    const STORAGE_PEOPLE = 'controlDeudas:people';
+
+    let records = [];
+    let people = [];
+    let dbReady = true;
+    let peopleReady = true;
+
+    function loadLocal() {
+        try { records = JSON.parse(localStorage.getItem(STORAGE_DEBTS)) || []; }
+        catch (e) { records = []; }
+        try { people = JSON.parse(localStorage.getItem(STORAGE_PEOPLE)) || []; }
+        catch (e) { people = []; }
+    }
+
+    function saveRecords() {
+        try { localStorage.setItem(STORAGE_DEBTS, JSON.stringify(records)); }
+        catch (e) { openInfo('No se pudo guardar. Puede que el almacenamiento esté lleno.'); }
+    }
+
+    function savePeople() {
+        try { localStorage.setItem(STORAGE_PEOPLE, JSON.stringify(people)); }
+        catch (e) { openInfo('No se pudo guardar. Puede que el almacenamiento esté lleno.'); }
+    }
+
+    function genId() {
+        return Date.now().toString(36) + Math.random().toString(36).slice(2, 9);
+    }
+
+    const debtForm = document.getElementById('debtForm');
+    const personForm = document.getElementById('personForm');
+    const personNameInput = document.getElementById('personName');
+    const peopleChips = document.getElementById('peopleChips');
+    const personSelect = document.getElementById('personSelect');
+    const listMeDeben = document.getElementById('listMeDeben');
+    const listYoDebo = document.getElementById('listYoDebo');
+    const totalMeDebenEl = document.getElementById('totalMeDeben');
+    const totalYoDeboEl = document.getElementById('totalYoDebo');
+    const isCreditoEl = document.getElementById('isCredito');
+    const mesesEl = document.getElementById('meses');
+    const amountEl = document.getElementById('amount');
+    const cuotaPreviewEl = document.getElementById('cuotaPreview');
+    const modalOverlay = document.getElementById('modalOverlay');
+    const modalBox = document.getElementById('modalBox');
+
+    // ---- Modal helpers (reemplazan alert/confirm/prompt, que no funcionan embebidos) ----
+    function closeModal() {
+        modalOverlay.classList.add('hidden');
+        modalBox.innerHTML = '';
+    }
+    modalOverlay.addEventListener('click', (e) => {
+        if (e.target === modalOverlay) closeModal();
+    });
+
+    function openInfo(message) {
+        modalBox.innerHTML = `
+            <p></p>
+            <div class="modal-actions">
+                <button id="modalOk" style="flex:1;">Entendido</button>
+            </div>
+        `;
+        modalBox.querySelector('p').textContent = message;
+        modalOverlay.classList.remove('hidden');
+        modalBox.querySelector('#modalOk').addEventListener('click', closeModal);
+    }
+
+    function openConfirm(message) {
+        return new Promise((resolve) => {
+            modalBox.innerHTML = `
+                <p></p>
+                <div class="modal-actions">
+                    <button class="modal-cancel" id="modalCancel">Cancelar</button>
+                    <button class="modal-danger" id="modalConfirm">Eliminar</button>
+                </div>
+            `;
+            modalBox.querySelector('p').textContent = message;
+            modalOverlay.classList.remove('hidden');
+            modalBox.querySelector('#modalCancel').addEventListener('click', () => { closeModal(); resolve(false); });
+            modalBox.querySelector('#modalConfirm').addEventListener('click', () => { closeModal(); resolve(true); });
+        });
+    }
+
+    function openEditModal(item) {
+        return new Promise((resolve) => {
+            modalBox.innerHTML = `
+                <h3>Editar registro</h3>
+                <div class="modal-field">
+                    <label>Persona</label>
+                    <select id="editPerson">
+                        <option value="">Sin asignar</option>
+                    </select>
+                </div>
+                <div class="modal-field">
+                    <label>Descripción</label>
+                    <input type="text" id="editDesc">
+                </div>
+                <div class="modal-field">
+                    <label>Monto total ($)</label>
+                    <input type="number" step="0.01" id="editAmount">
+                </div>
+                ${item.isCredito ? `
+                <div class="modal-field">
+                    <label>Cantidad de meses</label>
+                    <input type="number" min="1" step="1" id="editMeses">
+                </div>` : ''}
+                <div class="modal-actions">
+                    <button class="modal-cancel" id="editCancel">Cancelar</button>
+                    <button id="editSave">Guardar</button>
+                </div>
+            `;
+            const editPersonEl = modalBox.querySelector('#editPerson');
+            editPersonEl.innerHTML = '<option value="">Sin asignar</option>' +
+                people.map(p => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
+            if (item.personId && people.some(p => p.id === item.personId)) {
+                editPersonEl.value = item.personId;
+            }
+            modalBox.querySelector('#editDesc').value = item.description;
+            modalBox.querySelector('#editAmount').value = item.amount;
+            if (item.isCredito) modalBox.querySelector('#editMeses').value = item.meses || 1;
+
+            modalOverlay.classList.remove('hidden');
+            modalBox.querySelector('#editCancel').addEventListener('click', () => { closeModal(); resolve(null); });
+            modalBox.querySelector('#editSave').addEventListener('click', () => {
+                const desc = modalBox.querySelector('#editDesc').value.trim();
+                const amount = parseFloat(modalBox.querySelector('#editAmount').value);
+                if (!desc || isNaN(amount) || amount <= 0) {
+                    openInfo('Por favor ingresa una descripción y un monto válidos.');
+                    return;
+                }
+                const personId = editPersonEl.value;
+                const personName = personId ? editPersonEl.options[editPersonEl.selectedIndex].textContent : null;
+                const result = { description: desc, amount, personId: personId || null, personName };
+                if (item.isCredito) {
+                    const meses = parseInt(modalBox.querySelector('#editMeses').value, 10);
+                    if (isNaN(meses) || meses <= 0) {
+                        openInfo('Cantidad de meses inválida.');
+                        return;
+                    }
+                    result.meses = meses;
+                }
+                closeModal();
+                resolve(result);
+            });
+        });
+    }
+
+    function updateCuotaPreview() {
+        if (!isCreditoEl.checked) {
+            cuotaPreviewEl.textContent = '';
+            return;
+        }
+        const amount = parseFloat(amountEl.value);
+        const meses = parseInt(mesesEl.value, 10);
+        if (amount > 0 && meses > 0) {
+            cuotaPreviewEl.textContent = `≈ $${(amount / meses).toFixed(2)} por mes durante ${meses} ${meses === 1 ? 'mes' : 'meses'}`;
+        } else {
+            cuotaPreviewEl.textContent = '';
+        }
+    }
+
+    isCreditoEl.addEventListener('change', () => {
+        mesesEl.disabled = !isCreditoEl.checked;
+        if (!isCreditoEl.checked) mesesEl.value = '';
+        updateCuotaPreview();
+    });
+    mesesEl.addEventListener('input', updateCuotaPreview);
+    amountEl.addEventListener('input', updateCuotaPreview);
+
+    function init() {
+        loadLocal();
+        dbReady = true;
+        peopleReady = true;
+        render();
+        renderPeople();
+    }
+
+    // ---- Personas ----
+    personForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const name = personNameInput.value.trim();
+        if (!name) return;
+        people.push({ id: genId(), name, createdAt: Date.now() });
+        savePeople();
+        personForm.reset();
+        renderPeople();
+    });
+
+    async function deletePerson(id) {
+        const ok = await openConfirm('¿Eliminar esta persona? Sus deudas ya registradas se mantienen, pero quedarán sin persona asignada.');
+        if (!ok) return;
+        people = people.filter(p => p.id !== id);
+        savePeople();
+        renderPeople();
+    }
+
+    function renderPeople() {
+        if (!peopleReady) {
+            peopleChips.innerHTML = '<span class="no-people">Sincronizando…</span>';
+        } else if (people.length === 0) {
+            peopleChips.innerHTML = '<span class="no-people">Todavía no agregaste a nadie.</span>';
+        } else {
+            peopleChips.innerHTML = people.map(p => `
+                <span class="person-chip">
+                    ${escapeHtml(p.name)}
+                    <button type="button" data-action="del-person" data-id="${p.id}" title="Eliminar persona">✕</button>
+                </span>
+            `).join('');
+        }
+
+        const currentValue = personSelect.value;
+        personSelect.innerHTML = '<option value="">Elegí una persona…</option>' +
+            people.map(p => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
+        if (people.some(p => p.id === currentValue)) {
+            personSelect.value = currentValue;
+        }
+    }
+
+    function escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    peopleChips.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-action="del-person"]');
+        if (!btn) return;
+        deletePerson(btn.dataset.id);
+    });
+
+    // ---- Deudas ----
+    debtForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const personId = personSelect.value;
+        const personOpt = personSelect.options[personSelect.selectedIndex];
+        const personName = personId ? personOpt.textContent : null;
+        const meses = isCreditoEl.checked && mesesEl.value ? parseInt(mesesEl.value, 10) : null;
+
+        const newRecord = {
+            id: genId(),
+            personId: personId || null,
+            personName: personName,
+            type: document.getElementById('type').value,
+            description: document.getElementById('description').value,
+            amount: parseFloat(amountEl.value),
+            paid: false,
+            isCredito: isCreditoEl.checked,
+            meses: meses,
+            paidCuotas: meses ? new Array(meses).fill(false) : null,
+            date: new Date().toLocaleDateString('es-ES', {
+                year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+            }),
+            createdAt: Date.now()
+        };
+
+        records.push(newRecord);
+        saveRecords();
+        debtForm.reset();
+        mesesEl.disabled = true;
+        cuotaPreviewEl.textContent = '';
+        render();
+    });
+
+    function togglePaid(id) {
+        const item = records.find(r => r.id === id);
+        if (!item) return;
+        item.paid = !item.paid;
+        saveRecords();
+        render();
+    }
+
+    function toggleCuota(id, index) {
+        const item = records.find(r => r.id === id);
+        if (!item || !item.isCredito || !item.meses) return;
+        if (!item.paidCuotas) item.paidCuotas = new Array(item.meses).fill(false);
+        item.paidCuotas[index] = !item.paidCuotas[index];
+        saveRecords();
+        render();
+    }
+
+    async function editRecord(id) {
+        const item = records.find(r => r.id === id);
+        if (!item) return;
+
+        const result = await openEditModal(item);
+        if (!result) return;
+
+        item.description = result.description;
+        item.amount = result.amount;
+        item.personId = result.personId;
+        item.personName = result.personName;
+        if (item.isCredito) {
+            const oldPaid = item.paidCuotas || [];
+            item.meses = result.meses;
+            item.paidCuotas = new Array(result.meses).fill(false).map((_, i) => oldPaid[i] || false);
+        }
+
+        saveRecords();
+        render();
+    }
+
+    async function deleteRecord(id) {
+        const ok = await openConfirm('¿Estás seguro de borrar este registro?');
+        if (!ok) return;
+        records = records.filter(r => r.id !== id);
+        saveRecords();
+        render();
+    }
+
+    function remainingOf(item) {
+        if (item.isCredito && item.meses) {
+            const paidCount = (item.paidCuotas || []).filter(Boolean).length;
+            const cuotaMonto = item.amount / item.meses;
+            return Math.max(0, item.amount - paidCount * cuotaMonto);
+        }
+        return item.paid ? 0 : item.amount;
+    }
+
+    function renderItem(item) {
+        const isMeDeben = item.type === 'meDeben';
+        const li = document.createElement('li');
+        if (!item.isCredito && item.paid) li.classList.add('paid');
+
+        let cuotasHtml = '';
+        if (item.isCredito && item.meses) {
+            const cuotaMonto = item.amount / item.meses;
+            const paidCuotas = item.paidCuotas || new Array(item.meses).fill(false);
+            const paidCount = paidCuotas.filter(Boolean).length;
+            const remaining = remainingOf(item);
+            const chips = paidCuotas.map((paid, i) => `
+                <button type="button" class="cuota-chip ${paid ? 'paid' : ''}" data-action="toggle-cuota" data-id="${item.id}" data-index="${i}">
+                    Cuota ${i + 1}: $${cuotaMonto.toFixed(2)}
+                </button>
+            `).join('');
+            cuotasHtml = `
+                <div class="cuotas-box">
+                    <div class="cuotas-grid">${chips}</div>
+                    <div class="cuota-progress">
+                        <span>${paidCount} / ${item.meses} cuotas pagadas</span>
+                        ${remaining <= 0
+                            ? '<span class="completo">Saldado ✓</span>'
+                            : `<span class="restante">Restante: $${remaining.toFixed(2)}</span>`}
+                    </div>
+                </div>
+            `;
+        }
+
+        li.innerHTML = `
+            <div class="row-top">
+                <div class="item-info">
+                    <span class="item-desc"></span>
+                    <span class="item-amount ${isMeDeben ? 'me-deben-amount' : 'yo-debo-amount'}">
+                        $${item.amount.toFixed(2)}
+                    </span>
+                    ${item.isCredito ? `<span class="credito-tag">Crédito${item.meses ? ' · ' + item.meses + (item.meses === 1 ? ' mes' : ' meses') : ''}</span>` : ''}
+                    <span class="item-date"></span>
+                </div>
+                <div class="actions">
+                    ${!item.isCredito ? `
+                    <button type="button" class="btn-action btn-paid ${item.paid ? 'active' : ''}" data-action="paid" data-id="${item.id}" title="Marcar como pagado">
+                        ${item.paid ? '✓ Pagado' : '✓'}
+                    </button>` : ''}
+                    <button type="button" class="btn-action" data-action="edit" data-id="${item.id}" title="Editar">✏️</button>
+                    <button type="button" class="btn-action btn-delete" data-action="delete" data-id="${item.id}" title="Eliminar">✕</button>
+                </div>
+            </div>
+            ${cuotasHtml}
+        `;
+        li.querySelector('.item-desc').textContent = item.description;
+        li.querySelector('.item-date').textContent = item.date;
+        return li;
+    }
+
+    function renderColumn(container, items) {
+        container.innerHTML = '';
+        if (items.length === 0) return;
+
+        const groups = new Map();
+        items.forEach(item => {
+            const key = item.personName || 'Sin asignar';
+            if (!groups.has(key)) groups.set(key, []);
+            groups.get(key).push(item);
+        });
+
+        groups.forEach((groupItems, personName) => {
+            const subtotal = groupItems.reduce((sum, it) => sum + remainingOf(it), 0);
+            const groupEl = document.createElement('div');
+            groupEl.className = 'person-group';
+            groupEl.innerHTML = `
+                <div class="person-group-header">
+                    <span></span>
+                    <span class="sub">$${subtotal.toFixed(2)}</span>
+                </div>
+            `;
+            groupEl.querySelector('.person-group-header span').textContent = personName;
+            const ul = document.createElement('ul');
+            groupItems.forEach(item => ul.appendChild(renderItem(item)));
+            groupEl.appendChild(ul);
+            container.appendChild(groupEl);
+        });
+    }
+
+    function render() {
+        if (!dbReady) {
+            listMeDeben.innerHTML = '<div style="text-align:center;color:var(--completed);padding:10px;">Sincronizando…</div>';
+            listYoDebo.innerHTML = '<div style="text-align:center;color:var(--completed);padding:10px;">Sincronizando…</div>';
+            totalMeDebenEl.textContent = '—';
+            totalYoDeboEl.textContent = '—';
+            return;
+        }
+
+        const meDebenItems = records.filter(r => r.type === 'meDeben');
+        const yoDeboItems = records.filter(r => r.type === 'yoDebo');
+
+        renderColumn(listMeDeben, meDebenItems);
+        renderColumn(listYoDebo, yoDeboItems);
+
+        const totalMeDeben = meDebenItems.reduce((sum, it) => sum + remainingOf(it), 0);
+        const totalYoDebo = yoDeboItems.reduce((sum, it) => sum + remainingOf(it), 0);
+
+        totalMeDebenEl.textContent = `$${totalMeDeben.toFixed(2)}`;
+        totalYoDeboEl.textContent = `$${totalYoDebo.toFixed(2)}`;
+    }
+
+    [listMeDeben, listYoDebo].forEach(el => {
+        el.addEventListener('click', (e) => {
+            const btn = e.target.closest('[data-action]');
+            if (!btn) return;
+            const id = btn.dataset.id;
+            if (btn.dataset.action === 'paid') togglePaid(id);
+            if (btn.dataset.action === 'edit') editRecord(id);
+            if (btn.dataset.action === 'delete') deleteRecord(id);
+            if (btn.dataset.action === 'toggle-cuota') toggleCuota(id, parseInt(btn.dataset.index, 10));
+        });
+    });
+
+    init();
+</script>
+
+<script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('service-worker.js').catch(() => {});
+        });
+    }
+</script>
+
+</body>
+</html>
